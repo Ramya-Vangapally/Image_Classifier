@@ -1,10 +1,19 @@
 # streamlit_app.py
 
+import numpy as np
 import streamlit as st
-import requests
+import tensorflow as tf
 from PIL import Image
 
 st.title("🐱🐶 Cat vs Dog Classifier")
+
+
+@st.cache_resource
+def load_model():
+    return tf.keras.models.load_model("cats_dogs_classifier.h5")
+
+
+model = load_model()
 
 uploaded_file = st.file_uploader(
     "Upload an image",
@@ -19,17 +28,14 @@ if uploaded_file is not None:
     # Predict button
     if st.button("Predict"):
         try:
-            # Send image to Flask backend
-            files = {"file": uploaded_file.getvalue()}
+            img = image.convert("RGB").resize((224, 224))
+            img_array = np.array(img) / 255.0
+            img_array = np.expand_dims(img_array, axis=0)
 
-            response = requests.post(
-                "http://127.0.0.1:5000/predict",
-                files=files
-            )
+            prediction = model.predict(img_array)
+            result = "Dog" if prediction[0][0] > 0.5 else "Cat"
 
-            result = response.json()
-
-            st.success(f"Prediction: {result['prediction']}")
+            st.success(f"Prediction: {result}")
 
         except Exception as e:
             st.error(f"Error: {e}")
