@@ -20,9 +20,11 @@ if uploaded_file is not None:
     # Predict button
     if st.button("Predict"):
         try:
+            # Convert to RGB before saving to prevent RGBA to JPEG error for PNGs
+            rgb_image = image.convert('RGB')
             # Save temporarily
             file_path = "temp.jpg"
-            image.save(file_path)
+            rgb_image.save(file_path)
             
             # Use the predict function from Flask app
             result = predict_image(file_path)
