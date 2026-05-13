@@ -9,6 +9,27 @@ app = Flask(__name__)
 model = tf.keras.models.load_model("cats_dogs_classifier.h5")
 
 
+def predict_image(file_path):
+    """Predict cat or dog from image file"""
+    # Preprocess image
+    img = image.load_img(file_path, target_size=(224, 224))
+    img_array = image.img_to_array(img)
+    
+    # Normalize
+    img_array = img_array / 255.0
+    
+    # Add batch dimension
+    img_array = np.expand_dims(img_array, axis=0)
+    
+    # Predict
+    prediction = model.predict(img_array)
+    
+    # Convert probability to label
+    result = "Dog" if prediction[0][0] > 0.5 else "Cat"
+    
+    return result
+
+
 @app.route('/')
 def home():
     return '''
@@ -35,22 +56,8 @@ def predict():
     file_path = "temp.jpg"
     file.save(file_path)
 
-    # Preprocess image
-    img = image.load_img(file_path, target_size=(224, 224))
-
-    img_array = image.img_to_array(img)
-
-    # Normalize
-    img_array = img_array / 255.0
-
-    # Add batch dimension
-    img_array = np.expand_dims(img_array, axis=0)
-
     # Predict
-    prediction = model.predict(img_array)
-
-    # Convert probability to label
-    result = "Dog" if prediction[0][0] > 0.5 else "Cat"
+    result = predict_image(file_path)
 
     # Return JSON response
     return jsonify({
